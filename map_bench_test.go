@@ -100,11 +100,11 @@ func benchmarkSwissMap[K comparable](b *testing.B, keys []K) {
 		m.Put(k, k)
 	}
 	b.ResetTimer()
-	var ok bool
+	var v []K
 	for i := 0; i < b.N; i++ {
-		_, ok = m.Get(keys[uint32(i)&mod])
+		v = m.Get(keys[uint32(i)&mod])
 	}
-	assert.True(b, ok)
+	assert.Len(b, v, 1)
 	b.ReportAllocs()
 }
 

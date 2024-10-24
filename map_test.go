@@ -72,14 +72,8 @@ func testSwissMap[K comparable](t *testing.T, keys []K) {
 	t.Run("put", func(t *testing.T) {
 		testMapPut(t, keys)
 	})
-	t.Run("has", func(t *testing.T) {
-		testMapHas(t, keys)
-	})
 	t.Run("get", func(t *testing.T) {
 		testMapGet(t, keys)
-	})
-	t.Run("delete", func(t *testing.T) {
-		testMapDelete(t, keys)
 	})
 	t.Run("clear", func(t *testing.T) {
 		testMapClear(t, keys)
@@ -143,24 +137,14 @@ func testMapPut[K comparable](t *testing.T, keys []K) {
 	for i, key := range keys {
 		m.Put(key, -i)
 	}
-	assert.Equal(t, len(keys), m.Count())
+	assert.Equal(t, len(keys)*2, m.Count())
 	for i, key := range keys {
-		act, ok := m.Get(key)
-		assert.True(t, ok)
-		assert.Equal(t, -i, act)
+		act := m.Get(key)
+		assert.Len(t, act, 2)
+		assert.Contains(t, act, i)
+		assert.Contains(t, act, -i)
 	}
-	assert.Equal(t, len(keys), int(m.resident))
-}
-
-func testMapHas[K comparable](t *testing.T, keys []K) {
-	m := NewMap[K, int](uint32(len(keys)))
-	for i, key := range keys {
-		m.Put(key, i)
-	}
-	for _, key := range keys {
-		ok := m.Has(key)
-		assert.True(t, ok)
-	}
+	assert.Equal(t, len(keys)*2, int(m.resident))
 }
 
 func testMapGet[K comparable](t *testing.T, keys []K) {
@@ -169,30 +153,10 @@ func testMapGet[K comparable](t *testing.T, keys []K) {
 		m.Put(key, i)
 	}
 	for i, key := range keys {
-		act, ok := m.Get(key)
-		assert.True(t, ok)
-		assert.Equal(t, i, act)
+		act := m.Get(key)
+		assert.Len(t, act, 1)
+		assert.Equal(t, i, act[0])
 	}
-}
-
-func testMapDelete[K comparable](t *testing.T, keys []K) {
-	m := NewMap[K, int](uint32(len(keys)))
-	assert.Equal(t, 0, m.Count())
-	for i, key := range keys {
-		m.Put(key, i)
-	}
-	assert.Equal(t, len(keys), m.Count())
-	for _, key := range keys {
-		m.Delete(key)
-		ok := m.Has(key)
-		assert.False(t, ok)
-	}
-	assert.Equal(t, 0, m.Count())
-	// put keys back after deleting them
-	for i, key := range keys {
-		m.Put(key, i)
-	}
-	assert.Equal(t, len(keys), m.Count())
 }
 
 func testMapClear[K comparable](t *testing.T, keys []K) {
@@ -205,10 +169,8 @@ func testMapClear[K comparable](t *testing.T, keys []K) {
 	m.Clear()
 	assert.Equal(t, 0, m.Count())
 	for _, key := range keys {
-		ok := m.Has(key)
-		assert.False(t, ok)
-		_, ok = m.Get(key)
-		assert.False(t, ok)
+		act := m.Get(key)
+		assert.Empty(t, act)
 	}
 	var calls int
 	m.Iter(func(k K, v int) (stop bool) {
@@ -253,16 +215,16 @@ func testMapIter[K comparable](t *testing.T, keys []K) {
 	for _, c := range visited {
 		assert.Equal(t, c, uint(1))
 	}
-	// mutate on iter
-	m.Iter(func(k K, v int) (stop bool) {
-		m.Put(k, -v)
-		return
-	})
-	for i, key := range keys {
-		act, ok := m.Get(key)
-		assert.True(t, ok)
-		assert.Equal(t, -i, act)
-	}
+	//// mutate on iter
+	//m.Iter(func(k K, v int) (stop bool) {
+	//	m.Put(k, -v)
+	//	return
+	//})
+	//for i, key := range keys {
+	//	act, ok := m.Get(key)
+	//	assert.True(t, ok)
+	//	assert.Equal(t, -i, act)
+	//}
 }
 
 func testMapGrow[K comparable](t *testing.T, keys []K) {
@@ -272,9 +234,9 @@ func testMapGrow[K comparable](t *testing.T, keys []K) {
 		m.Put(key, i)
 	}
 	for i, key := range keys {
-		act, ok := m.Get(key)
-		assert.True(t, ok)
-		assert.Equal(t, i, act)
+		act := m.Get(key)
+		assert.Len(t, act, 1)
+		assert.Equal(t, i, act[0])
 	}
 }
 
